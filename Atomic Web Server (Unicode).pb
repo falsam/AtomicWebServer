@@ -12,7 +12,6 @@ Global SEvent, ClientID
 
 Global *Buffer = AllocateMemory(10000)
 
-;Plan de l'application
 Declare Start()                                                 
 Declare ProcessRequest()                                         
 Declare BuildRequestHeader(*Buffer, DataLength, ContentType.s)  
@@ -153,8 +152,10 @@ Procedure Exit()
   End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x86)
+; CursorPosition = 13
+; FirstLine = 66
 ; Folding = -
-; Markers = 79,108
+; Markers = 78,107
 ; EnableUnicode
 ; EnableXP
 ; Executable = server.exe
