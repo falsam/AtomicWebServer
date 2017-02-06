@@ -8,9 +8,9 @@ Global WWWDirectory.s = "www/"
 Global WWWIndex.s = "index.html"
 Global WWWError.s = "error.html"
 
-Global SEvent, ClientID
+Global BufferSize = 1024, *Buffer = AllocateMemory(BufferSize), Buffer.s
 
-Global *Buffer = AllocateMemory(10000)
+Global ClientID
 
 Declare Start()                                                 
 Declare ProcessRequest()                                         
@@ -21,6 +21,8 @@ Start()
 
 ;Affichage / Show application
 Procedure Start()
+  Protected ServerEvent, Result
+  
   If Not InitNetwork() 
     MessageRequester(Title, "Can't initialize the network !", 0)
   Else     
@@ -28,8 +30,11 @@ Procedure Start()
     ;Création du serveur / Create server 
     If CreateNetworkServer(0, Port)      
       OpenWindow(0, 0, 0, 800, 600, Title)
-      EditorGadget(0, 0, 0, 800, 600, #PB_Editor_ReadOnly)
+      EditorGadget(0, 0, 0, 800, 560, #PB_Editor_ReadOnly)
       AddGadgetItem(0, -1, "Server listening on port " + Port)
+      
+      CheckBoxGadget(1, 10, 570, 200, 22, "Show Log") 
+      SetGadgetState(1, #PB_Checkbox_Checked)
       
       ;Déclencheur / Trigger
       BindEvent(#PB_Event_CloseWindow, @Exit())
@@ -37,15 +42,19 @@ Procedure Start()
       Repeat    
         Repeat : Until WindowEvent() = 0
         
-        SEvent = NetworkServerEvent()
-        If SEvent
+        ServerEvent = NetworkServerEvent()
+        If ServerEvent
           ClientID = EventClient()
-          
-          Select SEvent
-            Case #PB_NetworkEvent_Connect     
-            Case #PB_NetworkEvent_Disconnect   
-            Default 
-              ReceiveNetworkData(ClientID, *Buffer, 10000)
+          Buffer = ""
+          Select ServerEvent              
+            Case #PB_NetworkEvent_Data 
+              Repeat
+                FreeMemory(*Buffer)
+                *Buffer = AllocateMemory(BufferSize)
+                Result = ReceiveNetworkData(ClientID, *Buffer, BufferSize)
+                Buffer + PeekS(*Buffer, -1, #PB_UTF8)
+              Until Result <> BufferSize
+              
               ProcessRequest()
           EndSelect
         Else
@@ -63,8 +72,6 @@ Procedure ProcessRequest()
   Protected RequestedFile.s, FileLength, MaxPosition, Position, ContentType.s
   Protected *FileBuffer
   Protected BufferOffset.s, *BufferOffset
-  Protected Buffer.s = PeekS(*Buffer, -1, #PB_UTF8)
-  Protected Result.s
   
   If Left(Buffer, 3) = "GET"    
     MaxPosition = FindString(Buffer, Chr(13), 5)
@@ -80,8 +87,11 @@ Procedure ProcessRequest()
       RequestedFile = WWWIndex      
     EndIf
     
-    AddGadgetItem(0, -1, "Client IP " + IPString(GetClientIP(ClientID)) + " load " + RequestedFile) 
-    
+    ;Mise à jour du log / UPdated log
+    If GetGadgetState(1) = #PB_Checkbox_Checked
+      AddGadgetItem(0, -1, "Client IP " + IPString(GetClientIP(ClientID)) + " load " + RequestedFile) 
+    EndIf   
+      
     ;Envoyer la page HTML au client / Send the HTML page to the client
     If ReadFile(0, WWWDirectory + RequestedFile)
       
@@ -152,10 +162,10 @@ Procedure Exit()
   End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x86)
-; CursorPosition = 13
-; FirstLine = 66
+; CursorPosition = 89
+; FirstLine = 69
 ; Folding = -
-; Markers = 78,107
+; Markers = 85,117
 ; EnableUnicode
 ; EnableXP
 ; Executable = server.exe
