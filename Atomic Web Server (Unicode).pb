@@ -2,7 +2,7 @@ EnableExplicit
 
 Global Title.s = "Atomic Web Server v2.0"
 
-Global Port = 6832
+Global Port = 6833
 
 Global WWWDirectory.s = "www/"
 Global WWWIndex.s = "index.html"
@@ -100,7 +100,7 @@ Procedure ProcessRequest()
       
       ;Definition du content-type / Setup content-type
       ;Ref : https://fr.wikipedia.org/wiki/Type_MIME
-      Select Right(RequestedFile, 4)
+      Select GetExtensionPart(RequestedFile)
         Case ".css" : ContentType = "text/css"
         Case ".js"  : ContentType = "application/javascript" 
         Case ".gif" : ContentType = "image/gif"
@@ -162,7 +162,7 @@ Procedure Exit()
   End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x86)
-; CursorPosition = 89
+; CursorPosition = 74
 ; FirstLine = 69
 ; Folding = -
 ; Markers = 85,117
