@@ -15,6 +15,7 @@ Global ClientID
 Declare Start()                                                 
 Declare ProcessRequest()                                         
 Declare BuildRequestHeader(*Buffer, DataLength, ContentType.s)  
+Declare Resize()
 Declare Exit()                                                  
 
 Start()
@@ -29,7 +30,7 @@ Procedure Start()
     
     ;Création du serveur / Create server 
     If CreateNetworkServer(0, Port)      
-      OpenWindow(0, 0, 0, 800, 600, Title)
+      OpenWindow(0, 0, 0, 800, 600, Title, #PB_Window_SystemMenu | #PB_Window_SizeGadget)
       EditorGadget(0, 0, 0, 800, 560, #PB_Editor_ReadOnly)
       AddGadgetItem(0, -1, "Server listening on port " + Port)
       
@@ -37,6 +38,7 @@ Procedure Start()
       SetGadgetState(1, #PB_Checkbox_Checked)
       
       ;Déclencheur / Trigger
+      BindEvent(#PB_Event_SizeWindow, @Resize())
       BindEvent(#PB_Event_CloseWindow, @Exit())
       
       Repeat    
@@ -74,6 +76,7 @@ Procedure ProcessRequest()
   Protected BufferOffset.s, *BufferOffset
   
   If Left(Buffer, 3) = "GET"    
+    ;Extract page html from GET /yourpage.html HTTP/1.1
     MaxPosition = FindString(Buffer, Chr(13), 5)
     Position = FindString(Buffer, " ", 5)
     If Position < MaxPosition
@@ -134,7 +137,7 @@ Procedure ProcessRequest()
   EndIf  
 EndProcedure
 
-;Modification entete HTTP / Edit HTTP header
+;Creation entete HTTP / Create HTTP header
 Procedure BuildRequestHeader(*FileBuffer, FileLength, ContentType.s)
   Protected Length
   Protected Week.s = "Sun, Mon,Tue,Wed,Thu,Fri,Sat"
@@ -156,16 +159,25 @@ Procedure BuildRequestHeader(*FileBuffer, FileLength, ContentType.s)
   ProcedureReturn *FileBuffer
 EndProcedure
 
+Procedure Resize()
+  Protected Width = WindowWidth(0)
+  Protected Height = WindowHeight(0)
+  
+  ResizeGadget(0, #PB_Ignore, #PB_Ignore, Width, Height-40)
+  ResizeGadget(1, #PB_Ignore, Height - 30, #PB_Ignore, #PB_Ignore)
+EndProcedure
+
+
 ;Sortie  / Exit 
 Procedure Exit()
   CloseNetworkServer(0)  
   End
 EndProcedure
 ; IDE Options = PureBasic 5.42 LTS (Windows - x86)
-; CursorPosition = 74
-; FirstLine = 69
-; Folding = -
-; Markers = 85,117
+; CursorPosition = 166
+; FirstLine = 96
+; Folding = 8
+; Markers = 88,120
 ; EnableUnicode
 ; EnableXP
 ; Executable = server.exe
